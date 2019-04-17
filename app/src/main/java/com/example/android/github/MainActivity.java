@@ -2,6 +2,7 @@
 package com.example.android.github;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -41,15 +42,44 @@ public class MainActivity extends AppCompatActivity {
      * our (not yet created) {@link GithubQueryTask}
      */
     private void makeGithubSearchQuery() {
+        // Get respository name to search on
         String githubQuery = mSearchBoxEditText.getText().toString();
+
+        // Create the URL to call the github API
         URL githubSearchUrl = NetworkUtils.buildUrl(githubQuery);
         mUrlDisplayTextView.setText(githubSearchUrl.toString());
-        String githubSearchResults = null;
-        try {
-            githubSearchResults = NetworkUtils.getResponseFromHttpUrl(githubSearchUrl);
-            mSearchResultsTextView.setText(githubSearchResults);
-        } catch (IOException e) {
-            e.printStackTrace();
+
+        // Run the query (url is passed to doInBackground)
+        new GithubQueryTask().execute(githubSearchUrl);
+    }
+
+    /**
+     * This class is used to execute a query to the github URI (ie. an internet
+     * access) using an AsyncTask, which will perform the query on a thread
+     * other than the UI thread
+     *
+     * It accepts a URL (ie. the github API). It does not perform any status
+     * updates (hence the usage of Void, and it returns a String.
+     */
+    public class GithubQueryTask extends AsyncTask<URL, Void, String> {
+
+        @Override
+        protected String doInBackground(URL... urls) {
+            URL searchUrl = urls[0];
+            String githubSearchResults = null;
+            try {
+                githubSearchResults = NetworkUtils.getResponseFromHttpUrl(searchUrl);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return githubSearchResults;
+        }
+
+        @Override
+        protected void onPostExecute(String githubSearchResults) {
+            if (githubSearchResults != null && !githubSearchResults.equals("")) {
+                mSearchResultsTextView.setText(githubSearchResults);
+            }
         }
     }
 

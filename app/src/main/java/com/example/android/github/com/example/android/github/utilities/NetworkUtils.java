@@ -16,6 +16,7 @@
 package com.example.android.github.com.example.android.github.utilities;
 
 import android.net.Uri;
+import android.os.AsyncTask;
 
 import java.io.IOException;
 import java.io.InputStream;
