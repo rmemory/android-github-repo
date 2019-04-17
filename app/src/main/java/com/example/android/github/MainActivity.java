@@ -7,7 +7,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +25,10 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView mSearchResultsTextView;
 
+    private TextView mErrorMessageDisplay;
+
+    private ProgressBar mLoadingIndicator;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +39,38 @@ public class MainActivity extends AppCompatActivity {
         mUrlDisplayTextView = (TextView) findViewById(R.id.tv_url_display);
 
         mSearchResultsTextView = (TextView) findViewById(R.id.tv_github_search_results_json);
+
+        mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
+
+        mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
+    }
+
+    /**
+     * This method will make the View for the JSON data visible and
+     * hide the error message.
+     * <p>
+     * Since it is okay to redundantly set the visibility of a View, we don't
+     * need to check whether each view is currently visible or invisible.
+     */
+    private void showJsonDataView() {
+        // First, make sure the error is invisible
+        mErrorMessageDisplay.setVisibility(View.INVISIBLE);
+        // Then, make sure the JSON data is visible
+        mSearchResultsTextView.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * This method will make the error message visible and hide the JSON
+     * View.
+     * <p>
+     * Since it is okay to redundantly set the visibility of a View, we don't
+     * need to check whether each view is currently visible or invisible.
+     */
+    private void showErrorMessage() {
+        // First, hide the currently visible data
+        mSearchResultsTextView.setVisibility(View.INVISIBLE);
+        // Then, show the error
+        mErrorMessageDisplay.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -64,6 +102,12 @@ public class MainActivity extends AppCompatActivity {
     public class GithubQueryTask extends AsyncTask<URL, Void, String> {
 
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mLoadingIndicator.setVisibility(View.VISIBLE);
+        }
+
+        @Override
         protected String doInBackground(URL... urls) {
             URL searchUrl = urls[0];
             String githubSearchResults = null;
@@ -77,8 +121,12 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String githubSearchResults) {
+            mLoadingIndicator.setVisibility(View.INVISIBLE);
             if (githubSearchResults != null && !githubSearchResults.equals("")) {
+                showJsonDataView();
                 mSearchResultsTextView.setText(githubSearchResults);
+            } else {
+                showErrorMessage();
             }
         }
     }
